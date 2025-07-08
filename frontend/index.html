@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Web-Based EDA Tool (Verilator)</title>
+  <style>
+    textarea { width: 90%; height: 200px; font-family: monospace; margin-bottom: 10px; }
+    button { margin: 5px; padding: 10px; font-weight: bold; }
+    #output { background-color: #f4f4f4; border: 1px solid #ccc; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Design (Verilog / SystemVerilog)</h2>
+  <textarea id="design">// Enter your Verilog or SystemVerilog design code here</textarea>
+
+  <h2>Testbench (Verilog / SystemVerilog or C++ for Verilator)</h2>
+  <textarea id="testbench">// Enter your Verilator-compatible testbench here (C++ preferred)</textarea>
+
+  <div>
+    <button onclick="compile()">Compile</button>
+    <button onclick="runSim()">Run</button>
+  </div>
+
+  <h3>Simulation Output</h3>
+  <div id="output">Output will appear here...</div>
+
+  <script>
+    let lastCompiled = false;
+
+    async function compile() {
+      const design = document.getElementById("design").value;
+      const tb = document.getElementById("testbench").value;
+
+      const response = await fetch("http://localhost:5000/compile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ design, testbench: tb })
+      });
+
+      const result = await response.json();
+      document.getElementById("output").innerText = result.output || result.error;
+      lastCompiled = true;
+    }
+
+    async function runSim() {
+      if (!lastCompiled) {
+        document.getElementById("output").innerText = "Please compile first!";
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/run", {
+        method: "GET"
+      });
+
+      const result = await response.json();
+      document.getElementById("output").innerText = result.output || result.error;
+    }
+  </script>
+</body>
+</html>
+
